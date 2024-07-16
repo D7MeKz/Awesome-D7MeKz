@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kube-logging
+  name: elasticsearch-client
+  labels:
+    app: elasticsearch
+    role: client
+spec:
+  type: NodePort
+  ports:
+  - port: 9200
+    name: client
+    nodePort: 30070
+  - port: 9300
+    name: transport
+  selector:
+    app: elasticsearch
+    role: client
