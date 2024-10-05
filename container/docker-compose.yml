@@ -1,0 +1,51 @@
+version: '3.7'
+
+services:
+  # Prometheus service
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Mount the Prometheus config file
+    ports:
+      - "9090:9090"  # Expose Prometheus web UI
+    networks:
+      - monitoring
+
+  # Grafana service
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Expose Grafana web UI
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus  # Ensure Prometheus starts before Grafana
+
+  # Spring Boot app service
+  advanced-echo:
+    image: s0okju/opsathlan-advanced-echo:0.1
+    container_name: opsathlan-advanced-echo
+    ports:
+     - "8080:8080"
+      # Expose Spring Boot app
+    networks:
+      - monitoring
+
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - "8081:8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge

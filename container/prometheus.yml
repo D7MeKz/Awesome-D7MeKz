@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 2s  # How often to scrape targets
+
+scrape_configs:
+  - job_name: 'opsathlan-advanced-echo'
+    static_configs:
+      - targets: ['opsathlan-advanced-echo:8080', 'cadvisor:8080']  # Replace with your actual Spring Boot app service name and port
+        labels:
+          group: 'test'
