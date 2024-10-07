@@ -1,0 +1,11 @@
+---
+- name: Make and execute container
+  hosts: all
+  become: yes
+  vars:
+    user: "{{ ansible_user }}"
+
+  tasks:
+    - name: Include Docker installation playbook
+      include_role:
+        name: docker-installation

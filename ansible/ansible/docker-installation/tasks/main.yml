@@ -1,0 +1,93 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+# ----- Remove unnecessary packages
+- name: Run the following command to uninstall all conflicting packages
+  become: yes
+  apt:
+    name: "{{ item }}"
+    state: absent
+    purge: yes
+  loop:
+    - docker.io
+    - docker-doc
+    - docker-compose
+    - docker-compose-v2
+    - podman-docker
+    - containerd
+    - runc
+- name: Autoremove unnecessary packages
+  apt:
+    autoremove: yes
+# ---- Add Docker repository
+- name: Install required packages
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - apt-transport-https
+      - software-properties-common
+    state: present
+
+- name: Create /etc/apt/keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download Docker GPG key
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Add Docker repository to apt sources
+  shell: |
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+- name: Update apt cache after adding Docker repository
+  apt:
+    update_cache: yes
+# ----- Install Docker
+- name: Update apt cache
+  apt:
+    update_cache: yes
+- name: Install Docker Engine, CLI, containerd, and plugins
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+- name: Ensure Docker service is started and enabled
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+# ----- Setup docker permission
+- name: Create 'docker' group if it doesn't exist
+  command: /usr/sbin/groupadd -f docker
+
+- name: Add the user to the 'docker' group
+  command: /usr/sbin/usermod -aG docker {{ user }}
+
+- name: Change ownership of Docker socket
+  file:
+    path: /var/run/docker.sock
+    owner: root
+    group: docker
+    mode: "0660"
+
+
+# ----- Verify docker
+- name: Verify Docker installation
+  command: docker --version
+  register: docker_version_output
+
+- name: Display Docker version
+  debug:
+    msg: "Docker version: {{ docker_version_output.stdout }}"

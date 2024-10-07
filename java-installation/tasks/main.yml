@@ -1,0 +1,31 @@
+---
+
+# ----- apt update
+- name: Update apt cache
+  apt:
+    update_cache: yes
+# ----- Install Java
+- name: Install Java17
+  apt:
+    name: openjdk-17-jdk
+    state: present
+
+- name: Upload the set_java_home.sh script to the remote server
+  copy:
+    src: set_java_home.sh
+    dest: /tmp/set_java_home.sh
+    mode: "0755"
+
+- name: Execute the set_java_home.sh script
+  shell: /tmp/set_java_home.sh
+  args:
+    executable: /bin/bash
+
+- name: Ensure Java 17 is installed
+  command: java -version
+  register: java_version
+  ignore_errors: yes
+
+- name: Debug Java version
+  debug:
+    msg: "{{ java_version.stdout }}"

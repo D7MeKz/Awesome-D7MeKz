@@ -44,23 +44,18 @@ variable "allowed_ports" {
     },
     {
       protocol       = "tcp"
-      port_range_min = 8080
-      port_range_max = 8080
+      port_range_min = 80
+      port_range_max = 80
     },
     {
       protocol       = "tcp"
-      port_range_min = 8081
-      port_range_max = 8081
+      port_range_min = 443
+      port_range_max = 443
     },
     {
       protocol       = "tcp"
-      port_range_min = 3000
-      port_range_max = 3000
-    },
-    {
-      protocol       = "tcp"
-      port_range_min = 9090
-      port_range_max = 9090
+      port_range_min = 18080
+      port_range_max = 18080
     }
   ]
 }

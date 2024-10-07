@@ -1,0 +1,71 @@
+---
+- name: Clone Spring Boot application repository
+  git:
+    repo: 'https://github.com/S0okJu/OpsAthlan.git'
+    dest: /home/ubuntu/app/spring-boot-app
+    version: sc/2
+    force: yes
+
+- name: Build Spring Boot application using Gradle
+  command: ./gradlew clean build
+  args:
+    chdir: /home/ubuntu/app/spring-boot-app/scenario_02/spring_advanced_echo
+  register: gradle_build
+  failed_when: gradle_build.rc != 0
+
+- name: Check if JAR file exists
+  stat:
+    path: /home/ubuntu/app/spring-boot-app/scenario_02/spring_advanced_echo/build/libs/
+  register: jar_dir
+
+- name: Fail if JAR file does not exist
+  fail:
+    msg: "JAR file was not built successfully."
+  when: jar_dir.stat.exists == False or jar_dir.stat.isdir == False
+
+- name: Copy Dockerfile for Spring Boot
+  copy:
+    src: Dockerfile
+    dest: /home/ubuntu/app/spring-boot-app/scenario_02/spring_advanced_echo/Dockerfile
+
+- name: Build Docker image for Spring Boot application
+  docker_image:
+    name: opsathlan-advanced-echo
+    tag: latest
+    source: build
+    build:
+      path: /home/ubuntu/app/spring-boot-app/scenario_02/spring_advanced_echo
+
+
+
+- name: Create Prometheus configuration directory
+  file:
+    path: "/home/ubuntu/prometheus"
+    state: directory
+    owner: "ubuntu"
+    group: "ubuntu"
+    mode: '0755'
+
+# Prometheus service
+- name: Copy Prometheus config file
+  copy:
+    src: ./prometheus.yml
+    dest: /home/ubuntu/prometheus/prometheus.yml
+    owner: "ubuntu"
+    group: "ubuntu"
+    mode: '0644'
+
+
+- name: Copy docker-compose.yml to the target machine
+  copy:
+    src: ./docker-compose.yml  # Local path to your docker-compose.yml
+    dest: /home/ubuntu/docker-compose.yml  # Destination on the target machine
+    owner: "ubuntu"
+    group: "ubuntu"
+    mode: '0644'
+
+- name: Run docker-compose up to start containers
+  command: docker compose up -d
+  args:
+    chdir: /home/ubuntu/
+  become: true
